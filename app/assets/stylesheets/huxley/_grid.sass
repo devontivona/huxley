@@ -1,0 +1,81 @@
+// Sources
+// 7 Habits of Highly Effective Media Queries by Brad Frost [http://bradfrostweb.com/blog/post/7-habits-of-highly-effective-media-queries/]
+// Responsive Web Design by Ethan Marcotte [http://alistapart.com/article/responsive-web-design]
+// http://www.chromaticsites.com/blog/responsive-grid-building-sass-and-zen-grids-tale-breakpoint-grid-breakdown-mixin
+// http://nicolasgallagher.com/micro-clearfix-hack/
+
+// Calculated widths
+$padding-width: $padding * $rhythm
+$gutter-width: $gutter * $rhythm
+$max-width: if($max == 0, 100%, $max * $rhythm)
+
+// Mixin for responding to different sizes
+@mixin target($target)
+	@each $candidate in $targets
+		@if $target == nth($candidate, 1)
+			@media screen and (min-width: #{nth($candidate, 2) * $rhythm})
+				@content
+
+// Mixin for spanning different grid columns
+// Size is the number of columns the item spans
+// Position is the column number the grid items starts on
+@mixin span($size, $position, $clear: none)
+	box-sizing: border-box
+	width: percentage($size / $column-count)
+	float: left
+	clear: $clear
+	margin-left: percentage(($position - 1) / $column-count)
+	margin-right: -100%
+	padding: 
+		left: $gutter-width / 2
+		right: $gutter-width / 2
+
+@mixin clearfix
+	&:before, &:after
+		content: " "
+		display: table
+	&:after
+		clear: both
+
+@mixin container
+	@include clearfix
+	position: relative
+	margin:
+		left: auto
+		right: auto
+		top: 0
+		bottom: 0
+	padding: 0 $gutter-width + $padding-width
+	width: 100%
+	max-width: $max-width
+	box-sizing: border-box
+
+@function count-spans($span-list)
+	$count: 0
+	@each $span in $span-list
+		$count: $count + $span
+	@return $count
+
+// Mixin for quickly scaffolding responsive grid layouts
+@mixin scaffold-span($target, $span-list)
+	$length: length($span-list)
+
+	// Inflate list if shorter than column count
+	$original-list: $span-list
+	@while count-spans($span-list) < $column-count
+		$span-list: join($span-list, $original-list)
+		$length: length($span-list)
+
+	// Iterate over the span list and generate nth-child rules
+	$column-index: 0
+	$new-row: true
+	@for $index from 1 through length($span-list)
+		$span: nth($span-list, $index)
+		@include target($target)
+			> *:nth-child(#{$length}n + #{$index})
+				$position: ($column-index % $column-count) + 1
+				@include span($span, $position, if($new-row, left, none))
+				@if $grid-debug
+					background: transparentize(if($new-row, blue, red), 0.5)
+		$new-row: ((($column-index % $column-count) + $span + 1) >= $column-count)
+		$column-index: $column-index + $span
