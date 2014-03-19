@@ -20,7 +20,7 @@ $max-width: if($max == 0, 100%, $max * $rhythm)
 // Size is the number of columns the item spans
 // Position is the column number the grid items starts on
 @mixin span($size, $position, $clear: none)
-	box-sizing: border-box
+	@include box-sizing(border-box)
 	width: percentage($size / $column-count)
 	float: left
 	clear: $clear
@@ -30,15 +30,9 @@ $max-width: if($max == 0, 100%, $max * $rhythm)
 		left: $gutter-width / 2
 		right: $gutter-width / 2
 
-@mixin clearfix
-	&:before, &:after
-		content: " "
-		display: table
-	&:after
-		clear: both
-
 @mixin container
 	@include clearfix
+	@include box-sizing(border-box)
 	position: relative
 	margin:
 		left: auto
